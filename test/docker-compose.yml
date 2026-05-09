@@ -1,0 +1,57 @@
+# Local end-to-end test harness for setup-python-artifactory.
+#
+# Brings up Artifactory OSS + a PostgreSQL backend (modern Artifactory OSS
+# images dropped Derby support and require Postgres). test/run-e2e.sh
+# bootstraps the instance (generic repo, admin token, synthetic fixture)
+# and runs the bundled action against it. See test/README.md for usage.
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: setup-python-artifactory-test-pg
+    environment:
+      POSTGRES_USER: artifactory
+      POSTGRES_PASSWORD: artifactory
+      POSTGRES_DB: artifactory
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U artifactory -d artifactory"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  artifactory:
+    image: releases-docker.jfrog.io/jfrog/artifactory-oss:7.98.13
+    container_name: setup-python-artifactory-test
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8082:8082"  # Router (REST + UI)
+      - "8081:8081"  # Direct service
+    environment:
+      JF_SHARED_DATABASE_TYPE: postgresql
+      JF_SHARED_DATABASE_DRIVER: org.postgresql.Driver
+      JF_SHARED_DATABASE_URL: "jdbc:postgresql://postgres:5432/artifactory"
+      JF_SHARED_DATABASE_USERNAME: artifactory
+      JF_SHARED_DATABASE_PASSWORD: artifactory
+      # Master + join keys (32-byte hex). Required by 7.x. Generated per
+      # developer into test/.env (gitignored) by run-e2e.sh — keeps random
+      # 64-char hex strings out of the repo so secret scanners don't flag
+      # them. Compose loads test/.env automatically because it sits next
+      # to this file.
+      JF_SHARED_SECURITY_MASTERKEY: ${JF_SHARED_SECURITY_MASTERKEY}
+      JF_SHARED_SECURITY_JOINKEY: ${JF_SHARED_SECURITY_JOINKEY}
+    volumes:
+      - artifactory-data:/var/opt/jfrog/artifactory
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8082/router/api/v1/system/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 60s
+
+volumes:
+  pg-data:
+  artifactory-data:

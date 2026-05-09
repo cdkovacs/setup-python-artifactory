@@ -1,0 +1,51 @@
+name: 'Setup Python (Artifactory)'
+description: 'Set up a specific version of Python from a JFrog Artifactory mirror. Air-gap friendly drop-in replacement for actions/setup-python.'
+author: 'internal'
+inputs:
+  python-version:
+    description: 'Version range or exact version of Python to use, using SemVer syntax. Reads from python-version-file if omitted.'
+    required: false
+  python-version-file:
+    description: 'File containing the Python version (e.g. .python-version). Used when python-version is not set.'
+    required: false
+  architecture:
+    description: 'Target architecture (x86, x64, arm64). Defaults to the runner architecture.'
+    required: false
+  check-latest:
+    description: 'Re-check the manifest for a newer matching version on every run, even if a satisfying version is already in the tool cache.'
+    required: false
+    default: 'false'
+  allow-prereleases:
+    description: 'Match prerelease versions when no GA version satisfies the range.'
+    required: false
+    default: 'false'
+  update-environment:
+    description: 'Update PATH and set pythonLocation / PKG_CONFIG_PATH / Python_ROOT_DIR after install.'
+    required: false
+    default: 'true'
+  artifactory-url:
+    description: 'Base URL of Artifactory, e.g. https://artifactory.example.com/artifactory'
+    required: true
+  artifactory-repo:
+    description: 'Name of the generic repo holding the manifest and tarballs (e.g. python-binaries-generic-local).'
+    required: true
+  artifactory-token:
+    description: 'Bearer token (Artifactory access/identity token) used to fetch the manifest and binaries. Pass via a secret.'
+    required: true
+  manifest-path:
+    description: 'Path within the repo to the versions manifest. Defaults to versions-manifest.json at the repo root.'
+    required: false
+    default: 'versions-manifest.json'
+outputs:
+  python-version:
+    description: 'The installed Python version (e.g. 3.11.9).'
+  python-path:
+    description: 'Absolute path to the python executable.'
+  cache-hit:
+    description: 'True when the requested version was already present in the runner tool cache.'
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
+branding:
+  icon: 'download'
+  color: 'blue'

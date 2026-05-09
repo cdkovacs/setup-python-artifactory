@@ -1,0 +1,28 @@
+{
+  "name": "setup-python-artifactory",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Air-gapped setup-python: install Python on GitHub Actions runners from a JFrog Artifactory mirror.",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc && ncc build lib/main.js -o dist --source-map --license licenses.txt",
+    "format": "prettier --write 'src/**/*.ts'",
+    "lint": "tsc --noEmit"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@actions/exec": "^1.1.1",
+    "@actions/http-client": "^2.2.3",
+    "@actions/io": "^1.1.3",
+    "@actions/tool-cache": "^2.0.2",
+    "semver": "^7.6.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/semver": "^7.5.8",
+    "@vercel/ncc": "^0.38.1",
+    "prettier": "^3.3.3",
+    "typescript": "^5.5.4"
+  }
+}
