@@ -70,6 +70,30 @@ flowchart TD
     ART -- "HTTPS + Bearer token" --> RUNNER
 ```
 
+## Required GHES action mirrors
+
+Air-gapped GHES runners can't resolve `uses: <owner>/<repo>@<tag>` against `github.com`. Every third-party action referenced by this project's workflows (and by the example workflows in [docs/](docs/)) must be mirrored into your internal GHES under the same owner/repo path and tag, with the action's compiled `dist/` intact, so the existing `uses:` lines keep resolving locally.
+
+| Action | Pinned at | Purpose | Upstream |
+| --- | --- | --- | --- |
+| `actions/checkout@v4` | `v4` | Checkout source in CI lint, sync, and publish workflows | <https://github.com/actions/checkout> |
+| `actions/setup-node@v4` | `v4` | Install Node.js for `npm ci` / `npm run build` and lint | <https://github.com/actions/setup-node> |
+| `jfrog/setup-jfrog-cli@v4` | `v4` | Provision `jf` CLI on the sync runner (only if you run `scripts/sync-to-artifactory.sh` as a GHES workflow) | <https://github.com/jfrog/setup-jfrog-cli> |
+
+Where this list comes from:
+
+- `.github/workflows/lint.yml` references `actions/checkout` and `actions/setup-node`.
+- `docs/artifactory-setup.md` (sync-from-Actions example) references `actions/checkout` and `jfrog/setup-jfrog-cli`.
+- `docs/publishing.md` (rebuild-and-tag example) references `actions/checkout` and `actions/setup-node`.
+
+This action itself bundles its Node deps via `ncc` into `dist/index.js`, so consumers calling `uses: your-org/setup-python-artifactory@v1` pick up no transitive action dependencies beyond the three above.
+
+### Mirroring approach
+
+The simplest path is a one-shot script per action: clone from `github.com/<owner>/<repo>` at the pinned tag, push to `https://<ghes>/<owner>/<repo>` preserving the tag, and rerun whenever you bump a major. Keep `dist/` from upstream, since these are JavaScript actions and the runner executes `dist/index.js` directly.
+
+If your GHES org name doesn't match upstream (e.g. you mirror under `internal-tools/` rather than `actions/`), update the `uses:` lines in this repo's workflows and the docs examples to match. Don't rewrite them upstream, because public github.com CI for this repo relies on the original paths.
+
 ## Development
 
 ```bash
@@ -93,7 +117,7 @@ npm run lint:shell     # shellcheck only
 
 | Where you're running | Source |
 | --- | --- |
-| Public github.com Actions (`GITHUB_SERVER_URL=https://github.com`) | upstream GitHub releases — no auth |
+| Public github.com Actions (`GITHUB_SERVER_URL=https://github.com`) | upstream GitHub releases without auth |
 | GHES Actions or local dev with `ARTIFACTORY_URL` set | Artifactory mirror under `<repo>/lint-tools/` |
 | Local dev with no Artifactory configured | upstream GitHub releases |
 

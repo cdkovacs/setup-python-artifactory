@@ -51,7 +51,7 @@ cleanup() {
 trap cleanup EXIT
 
 # 0. Sanity check: dist must exist.
-[[ -f dist/index.js ]] || fail "dist/index.js missing — run 'npm run build' first."
+[[ -f dist/index.js ]] || fail "dist/index.js missing. Run 'npm run build' first."
 
 # 1. Generate test/.env if missing. Holds the 32-byte hex master/join keys
 #    that Artifactory 7.x requires. Gitignored so the random hex doesn't
