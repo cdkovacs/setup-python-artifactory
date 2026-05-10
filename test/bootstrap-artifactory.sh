@@ -120,6 +120,21 @@ curl -fsS -u "$ART_USER:$ART_PASSWORD" \
   --data-binary "@$FIXTURE_DIR/versions-manifest.json" \
   -o /dev/null
 
+# Lint-tool stubs (optional). Mirrors what scripts/sync-lint-tools-to-artifactory.sh
+# does in production, so dev tooling (npm run lint:shell / lint:actions) can resolve
+# against this local Artifactory the same way the action does.
+if [[ -d "$FIXTURE_DIR/lint-tools" ]]; then
+  for asset_path in "$FIXTURE_DIR"/lint-tools/*; do
+    [[ -f "$asset_path" ]] || continue
+    asset_name=$(basename "$asset_path")
+    log "Uploading lint-tools/$asset_name"
+    curl -fsS -u "$ART_USER:$ART_PASSWORD" \
+      -X PUT "$ART_URL/$ART_REPO/lint-tools/$asset_name" \
+      --data-binary "@$asset_path" \
+      -o /dev/null
+  done
+fi
+
 # Print token to stdout for eval-style consumption.
 printf 'ARTIFACTORY_TOKEN=%s\n' "$TOKEN"
 log "Bootstrap complete"

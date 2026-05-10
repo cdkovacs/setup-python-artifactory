@@ -33,6 +33,14 @@ jobs:
 
       - name: shellcheck
         run: npm run lint:shell
+        env:
+          ARTIFACTORY_URL: ${{ vars.ARTIFACTORY_URL }}
+          ARTIFACTORY_REPO: ${{ vars.ARTIFACTORY_REPO }}
+          ARTIFACTORY_TOKEN: ${{ secrets.ARTIFACTORY_TOKEN }}
 
       - name: actionlint
         run: npm run lint:actions
+        env:
+          ARTIFACTORY_URL: ${{ vars.ARTIFACTORY_URL }}
+          ARTIFACTORY_REPO: ${{ vars.ARTIFACTORY_REPO }}
+          ARTIFACTORY_TOKEN: ${{ secrets.ARTIFACTORY_TOKEN }}

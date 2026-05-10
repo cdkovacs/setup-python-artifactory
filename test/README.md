@@ -52,6 +52,8 @@ docker compose -f test/docker-compose.yml down -v
 | `bootstrap-artifactory.sh` | Waits for the API + repo, mints a token, uploads the fixture |
 | `run-e2e.sh` | Orchestrates everything and asserts on action outputs |
 
+The fixture also includes stub `actionlint` and `shellcheck` archives, uploaded to `<repo>/lint-tools/`. These let the project's own dev-tooling scripts (`scripts/run-shellcheck.sh`, `scripts/run-actionlint.sh`) resolve against the local Artifactory exactly the way they do in production. They aren't exercised by `run-e2e.sh` — see "Verifying lint-tool download path" below if you want to test that flow manually.
+
 ## Generated `test/.env`
 
 `run-e2e.sh` writes `test/.env` (gitignored) on first run with two
@@ -84,6 +86,30 @@ bearer-auth tokens, which is everything we need to exercise the action.
 If you change `ART_REPO` to a non-default name, you'll need to create
 that repo manually via the UI (admin/password) before the bootstrap
 script can upload to it.
+
+## Verifying lint-tool download path (manual)
+
+After `KEEP_RUNNING=1 ./test/run-e2e.sh`, the local Artifactory has stub `actionlint` and `shellcheck` archives at `<repo>/lint-tools/`. To confirm `scripts/run-*.sh` can pull them:
+
+```bash
+eval "$(VERSION=3.11.99 ART_URL=http://127.0.0.1:8082/artifactory ART_REPO=example-repo-local \
+  FIXTURE_DIR=./test/.fixture ./test/bootstrap-artifactory.sh)"  # re-mint a token if needed
+
+rm -f bin/shellcheck bin/actionlint
+ARTIFACTORY_URL=http://127.0.0.1:8082/artifactory \
+ARTIFACTORY_REPO=example-repo-local \
+ARTIFACTORY_TOKEN="$ARTIFACTORY_TOKEN" \
+  ./scripts/run-shellcheck.sh --version
+# -> "ShellCheck v0.10.0 (test fixture)"
+
+ARTIFACTORY_URL=http://127.0.0.1:8082/artifactory \
+ARTIFACTORY_REPO=example-repo-local \
+ARTIFACTORY_TOKEN="$ARTIFACTORY_TOKEN" \
+  ./scripts/run-actionlint.sh -version
+# -> "actionlint 1.7.7 (test fixture)"
+```
+
+Both commands should download from the local Artifactory, cache into `./bin/`, and print the stub version banner.
 
 ## Real Python release (manual)
 

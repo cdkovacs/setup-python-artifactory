@@ -3,4 +3,5 @@ self-hosted-runner:
     - internet-egress
 config-variables:
   - ARTIFACTORY_URL
+  - ARTIFACTORY_REPO
   - ARTIFACTORY_SERVER_ID
