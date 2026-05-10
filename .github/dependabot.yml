@@ -10,11 +10,18 @@ updates:
     schedule:
       interval: "weekly"
     ignore:
-      # @actions/http-client v4 introduced an `exports` field that ncc 0.38
-      # cannot resolve `/lib/auth` against. Stay on v2 until ncc + the
-      # ecosystem catch up.
+      # @actions/http-client v3+ is ESM-only and v4 also introduced an
+      # `exports` field that ncc 0.38 cannot resolve `/lib/auth` against.
+      # Stay on v2 until ncc + our CommonJS build catch up.
       - dependency-name: "@actions/http-client"
-        versions: ["4.x"]
+        update-types: ["version-update:semver-major"]
+      # @actions/core v2+ is ESM-only; ncc 0.38 + our CommonJS build
+      # can't consume it. Block major bumps until we migrate.
+      - dependency-name: "@actions/core"
+        update-types: ["version-update:semver-major"]
+      # @actions/exec v2+ is ESM-only; same constraint as @actions/core.
+      - dependency-name: "@actions/exec"
+        update-types: ["version-update:semver-major"]
       # @actions/tool-cache v3+ is ESM-only; ncc 0.38 + our CommonJS build
       # can't consume it. Block major bumps until we migrate.
       - dependency-name: "@actions/tool-cache"
