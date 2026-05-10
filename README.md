@@ -77,4 +77,18 @@ npm ci
 npm run build      # produces dist/index.js (committed)
 ```
 
-`dist/index.js` is required at runtime — GitHub Actions doesn't `npm install` for you. Always commit the rebuilt `dist/` alongside source changes.
+`dist/index.js` is required at runtime. GitHub Actions doesn't `npm install` for you, so always commit the rebuilt `dist/` alongside source changes.
+
+### Linting
+
+```bash
+npm run lint           # everything: typecheck, eslint, prettier --check, actionlint, shellcheck
+npm run format         # auto-fix prettier formatting
+npm run lint:ts        # eslint only
+npm run lint:actions   # actionlint only (workflow YAML)
+npm run lint:shell     # shellcheck only
+```
+
+`lint:actions` and `lint:shell` auto-download the official `actionlint` and `shellcheck` binaries into `./bin/` (gitignored) on first run; no system install needed. Pin specific releases with `ACTIONLINT_VERSION=1.7.12` / `SHELLCHECK_VERSION=v0.10.0`.
+
+CI runs the same npm scripts (see `.github/workflows/lint.yml`). Project-specific actionlint config (allowed self-hosted runner labels, known config vars) lives in `.github/actionlint.yaml`.

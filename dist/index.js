@@ -368,19 +368,13 @@ function normalizeRange(input, allowPrereleases) {
     }
     if (/^\d+\.x$/.test(trimmed)) {
         const major = trimmed.split('.')[0];
-        return allowPrereleases
-            ? `>=${major}.0.0-0 <${Number(major) + 1}.0.0-0`
-            : `${major}.x`;
+        return allowPrereleases ? `>=${major}.0.0-0 <${Number(major) + 1}.0.0-0` : `${major}.x`;
     }
     if (/^\d+\.\d+$/.test(trimmed)) {
-        return allowPrereleases
-            ? `>=${trimmed}.0-0 <${nextMinor(trimmed)}`
-            : `~${trimmed}.0`;
+        return allowPrereleases ? `>=${trimmed}.0-0 <${nextMinor(trimmed)}` : `~${trimmed}.0`;
     }
     if (/^\d+$/.test(trimmed)) {
-        return allowPrereleases
-            ? `>=${trimmed}.0.0-0 <${Number(trimmed) + 1}.0.0-0`
-            : `${trimmed}.x`;
+        return allowPrereleases ? `>=${trimmed}.0.0-0 <${Number(trimmed) + 1}.0.0-0` : `${trimmed}.x`;
     }
     return trimmed;
 }

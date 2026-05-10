@@ -75,9 +75,7 @@ export function readPythonVersionFile(filePath: string): string {
     throw new Error(`No Python version found in ${absolute}`);
   }
   if (versions.length > 1) {
-    core.warning(
-      `Multiple versions found in ${absolute}; using the first: ${versions[0]}`
-    );
+    core.warning(`Multiple versions found in ${absolute}; using the first: ${versions[0]}`);
   }
   return versions[0];
 }

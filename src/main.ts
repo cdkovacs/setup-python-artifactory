@@ -91,10 +91,7 @@ function applyEnvironment(installDir: string): void {
   if (!IS_WINDOWS) {
     const pkgConfig = path.join(installDir, 'lib', 'pkgconfig');
     const existing = process.env.PKG_CONFIG_PATH;
-    core.exportVariable(
-      'PKG_CONFIG_PATH',
-      existing ? `${pkgConfig}:${existing}` : pkgConfig
-    );
+    core.exportVariable('PKG_CONFIG_PATH', existing ? `${pkgConfig}:${existing}` : pkgConfig);
   }
 }
 

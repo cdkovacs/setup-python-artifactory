@@ -148,7 +148,7 @@ log "Invoking installed python"
 
 # 8. Re-run the action and confirm it hits the cache.
 log "Re-running action to verify cache-hit"
-> "$GITHUB_OUTPUT_FILE"
+: > "$GITHUB_OUTPUT_FILE"
 env -i PATH="$PATH" HOME="$HOME" \
   "INPUT_PYTHON-VERSION=$VERSION" \
   "INPUT_ARTIFACTORY-URL=$ART_URL" \
