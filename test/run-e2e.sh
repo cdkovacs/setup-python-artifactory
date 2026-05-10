@@ -100,7 +100,7 @@ echo "Manifest first entry version: $(grep -o '"version":[^,]*' /tmp/manifest-ch
 log "Running the bundled action against local Artifactory"
 mkdir -p "$TOOL_CACHE" "$RUNNER_TEMP"
 
-# action-emitted ::set-output:: lines go to GITHUB_OUTPUT — capture them.
+# action-emitted ::set-output:: lines go to GITHUB_OUTPUT, so capture them.
 # GITHUB_ENV / GITHUB_PATH are appended to by core.exportVariable / core.addPath
 # and the action errors if the files don't exist, so create them upfront.
 GITHUB_OUTPUT_FILE="$(mktemp)"

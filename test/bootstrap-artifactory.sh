@@ -5,7 +5,7 @@
 #   3. Generate an admin scoped access token (printed on stdout).
 #   4. Upload the synthetic fixture (tarball + manifest) built by build-fixture.sh.
 #
-# This script is idempotent — re-running it against an already-bootstrapped
+# This script is idempotent. Re-running it against an already-bootstrapped
 # instance will skip steps that have already happened.
 #
 # Env vars:
@@ -59,7 +59,7 @@ curl -fsS -u "$ART_USER:$ART_PASSWORD" \
 # We do NOT call PUT /api/repositories/<key> here because that endpoint is
 # Pro-only on modern Artifactory OSS. Instead this harness uses the
 # stock 'example-repo-local' generic repo that Artifactory OSS provisions
-# automatically on first boot — it's already there and ready to accept
+# automatically on first boot. It's already there and ready to accept
 # uploads with admin credentials.
 log "Verifying repo $ART_REPO is available"
 http_code=$(curl -s -o /tmp/probe.out -w '%{http_code}' \
@@ -103,7 +103,7 @@ log "Token generated"
 
 # 4. Upload fixture.
 if [[ ! -f "$FIXTURE_DIR/$FILENAME" || ! -f "$FIXTURE_DIR/versions-manifest.json" ]]; then
-  log "Fixture missing in $FIXTURE_DIR — run test/build-fixture.sh first"
+  log "Fixture missing in $FIXTURE_DIR. Run test/build-fixture.sh first"
   exit 1
 fi
 

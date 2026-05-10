@@ -2,7 +2,7 @@
 
 Air-gapped drop-in replacement for [`actions/setup-python`](https://github.com/actions/setup-python) that resolves and downloads Python from a JFrog Artifactory mirror instead of from GitHub Releases.
 
-It uses the same manifest schema as [`actions/python-versions`](https://github.com/actions/python-versions), runs the upstream `setup.sh` / `setup.ps1` from the tarball, and registers the install in the runner tool cache (`RUNNER_TOOL_CACHE`) — so subsequent steps (`pip`, `tox`, etc.) work unchanged.
+It uses the same manifest schema as [`actions/python-versions`](https://github.com/actions/python-versions), runs the upstream `setup.sh` / `setup.ps1` from the tarball, and registers the install in the runner tool cache (`RUNNER_TOOL_CACHE`), so subsequent steps (`pip`, `tox`, etc.) work unchanged.
 
 ## Quick start
 
@@ -26,15 +26,15 @@ It uses the same manifest schema as [`actions/python-versions`](https://github.c
 
 | Name | Required | Default | Description |
 | --- | --- | --- | --- |
-| `python-version` | conditional | — | Version range or exact version (`3.11`, `3.11.x`, `>=3.10 <3.13`, `3.11.9`). One of `python-version` / `python-version-file` is required. |
-| `python-version-file` | no | — | Path to a file containing the version (`.python-version`, `pyproject.toml`'s `requires-python`, `Pipfile`'s `python_version`). Falls back to auto-detection if neither input is set. |
+| `python-version` | conditional | _none_ | Version range or exact version (`3.11`, `3.11.x`, `>=3.10 <3.13`, `3.11.9`). One of `python-version` / `python-version-file` is required. |
+| `python-version-file` | no | _none_ | Path to a file containing the version (`.python-version`, `pyproject.toml`'s `requires-python`, `Pipfile`'s `python_version`). Falls back to auto-detection if neither input is set. |
 | `architecture` | no | runner arch | `x64`, `x86`, or `arm64`. |
 | `check-latest` | no | `false` | Re-resolve against the manifest even if a satisfying version is in the tool cache. |
 | `allow-prereleases` | no | `false` | Match prereleases when no GA version satisfies the range. |
 | `update-environment` | no | `true` | Update `PATH`, `pythonLocation`, `Python_ROOT_DIR`, `PKG_CONFIG_PATH`. |
-| `artifactory-url` | yes | — | Base URL, e.g. `https://artifactory.example.com/artifactory`. |
-| `artifactory-repo` | yes | — | Generic repo name holding the manifest + tarballs. |
-| `artifactory-token` | yes | — | Bearer token (Artifactory access token / identity token). Pass via a secret. |
+| `artifactory-url` | yes | _none_ | Base URL, e.g. `https://artifactory.example.com/artifactory`. |
+| `artifactory-repo` | yes | _none_ | Generic repo name holding the manifest + tarballs. |
+| `artifactory-token` | yes | _none_ | Bearer token (Artifactory access token / identity token). Pass via a secret. |
 | `manifest-path` | no | `versions-manifest.json` | Path within the repo to the manifest. |
 
 ## Outputs
@@ -54,7 +54,7 @@ This action is intentionally smaller than upstream:
 - **No problem matchers.** Add them at the workflow level if needed.
 - **No freethreaded builds** are mirrored by default. Toggle `INCLUDE_FREETHREADED=true` on the sync job to publish them; the action skips them in matching.
 
-If you need any of the above, the architecture supports adding them — open an issue.
+If you need any of the above, the architecture supports adding them. Open an issue.
 
 ## How it works
 

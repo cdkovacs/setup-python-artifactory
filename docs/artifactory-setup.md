@@ -2,7 +2,7 @@
 
 This action expects a JFrog Artifactory **generic local** repository containing:
 
-- `versions-manifest.json` at the repo root — a copy of the upstream `actions/python-versions` manifest, with every `download_url` rewritten to point at this repo.
+- `versions-manifest.json` at the repo root. This is a copy of the upstream `actions/python-versions` manifest, with every `download_url` rewritten to point at this repo.
 - One file per Python build, named exactly as upstream (e.g. `python-3.11.9-linux-22.04-x64.tar.gz`), at the repo root.
 
 The sync script in [`scripts/sync-to-artifactory.sh`](../scripts/sync-to-artifactory.sh) creates and maintains both.
@@ -22,7 +22,7 @@ In Artifactory: **Administration → Repositories → Repositories → Add Repos
 | Handle Snapshots | ✗ |
 | Property Sets | *(none)* |
 
-Do **not** enable checksum policies that block uploads on missing SHA-256 — the upstream tarballs don't ship sidecar checksums, and we rely on Artifactory's own integrity checks.
+Do **not** enable checksum policies that block uploads on missing SHA-256. The upstream tarballs don't ship sidecar checksums, and we rely on Artifactory's own integrity checks.
 
 If you maintain a virtual repo for downstream consumption, layer `python-binaries-generic` over the local + any remotes; the action only needs read access to the resolving repo name you pass in `artifactory-repo`.
 
@@ -85,7 +85,7 @@ export ARCHES="x64"
 ### Scheduled run (cron)
 
 ```cron
-# Every Sunday at 02:00 — picks up any new patch releases.
+# Every Sunday at 02:00. Picks up any new patch releases.
 0 2 * * 0  cd /opt/setup-python-artifactory && ART_SERVER_ID=internal-artifactory ART_REPO=python-binaries-generic-local ./scripts/sync-to-artifactory.sh >> /var/log/python-mirror.log 2>&1
 ```
 
@@ -153,5 +153,5 @@ Plan ~2–3 GB of headroom and rely on Artifactory's storage policies for cleanu
 ## 7. Rotation and incident response
 
 - **Token rotation**: rotate the runner-side token at least quarterly. Update the `ARTIFACTORY_TOKEN` org secret. No action change needed.
-- **Bad mirror**: if a sync run uploads a corrupted file, re-run the sync — the script idempotently re-checks Artifactory and re-uploads anything missing or with a checksum mismatch. To force re-upload, delete the affected file from Artifactory first.
+- **Bad mirror**: if a sync run uploads a corrupted file, re-run the sync. The script idempotently re-checks Artifactory and re-uploads anything missing or with a checksum mismatch. To force re-upload, delete the affected file from Artifactory first.
 - **Hot patch a Python release**: if you need a version urgently before the next sync, run the sync script ad-hoc with `VERSION_LINES` narrowed to just that minor.

@@ -37,7 +37,7 @@ services:
       JF_SHARED_DATABASE_USERNAME: artifactory
       JF_SHARED_DATABASE_PASSWORD: artifactory
       # Master + join keys (32-byte hex). Required by 7.x. Generated per
-      # developer into test/.env (gitignored) by run-e2e.sh — keeps random
+      # developer into test/.env (gitignored) by run-e2e.sh, which keeps random
       # 64-char hex strings out of the repo so secret scanners don't flag
       # them. Compose loads test/.env automatically because it sits next
       # to this file.

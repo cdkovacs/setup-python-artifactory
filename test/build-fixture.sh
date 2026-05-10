@@ -10,7 +10,7 @@
 # Our setup.sh emulates what the upstream setup.sh does: copy the payload into
 # $RUNNER_TOOL_CACHE/Python/<version>/<arch> and create the .complete marker
 # so @actions/tool-cache's tc.find() picks it up. We do not exercise a real
-# CPython build here on purpose — that would require either internet egress
+# CPython build here on purpose. That would require either internet egress
 # at test time or a multi-GB fixture.
 #
 # Output:
@@ -50,7 +50,7 @@ PYSTUB
 chmod 0755 "$STAGE/tool/bin/python3"
 ln -sf python3 "$STAGE/tool/bin/python"
 
-# setup.sh — emulates upstream's tool-cache registration.
+# setup.sh: emulates upstream's tool-cache registration.
 cat > "$STAGE/setup.sh" <<'SETUP'
 #!/usr/bin/env bash
 set -euo pipefail

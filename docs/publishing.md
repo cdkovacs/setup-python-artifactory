@@ -34,7 +34,7 @@ Create one internal repo, e.g. `your-org/setup-python-artifactory`, and tag rele
    git push --tags --force
    ```
 
-   Floating major tags (`v1`) are the standard pattern — workflows pin to `@v1` and pick up patch updates automatically; pin to `@v1.0.0` for full reproducibility.
+   Floating major tags (`v1`) are the standard pattern. Workflows pin to `@v1` and pick up patch updates automatically; pin to `@v1.0.0` for full reproducibility.
 
 ## Allow the action in workflows
 
@@ -43,7 +43,7 @@ GHES restricts which actions can be used. In **Enterprise/Org settings → Actio
 - "Allow all actions and reusable workflows" (most permissive), or
 - "Allow enterprise, and select non-enterprise, actions" with `your-org/setup-python-artifactory@*` added to the allowlist.
 
-If you also want to ban the upstream `actions/setup-python` to prevent accidental egress attempts, add it to the disallowed list — the air-gap will fail it anyway, but failing in policy is friendlier than failing on a network timeout.
+If you also want to ban the upstream `actions/setup-python` to prevent accidental egress attempts, add it to the disallowed list. The air-gap will fail it anyway, but failing in policy is friendlier than failing on a network timeout.
 
 ## Release workflow (optional)
 

@@ -11,7 +11,7 @@ the runner tool cache), and runs the bundled action against it. Verifies:
 5. Outputs (`python-version`, `python-path`, `cache-hit`) are correct.
 6. A second invocation hits the tool cache (`cache-hit=true`).
 
-The test does **not** exercise a real CPython build — that would require
+The test does **not** exercise a real CPython build, which would require
 either internet egress or shipping a multi-GB fixture in this repo. To do a
 true end-to-end against a real Python release, see "Real Python release"
 below.
@@ -70,7 +70,7 @@ deleting `test/.env` just regenerates them on the next run.
 ## OSS limitation: repo creation REST endpoint
 
 Modern Artifactory OSS (7.x) gates `PUT /api/repositories/<key>` behind a
-Pro license — calling it returns:
+Pro license. Calling it returns:
 
 ```
 "This REST API is available only in Artifactory Pro ..."
@@ -93,7 +93,7 @@ To test against an actual `actions/python-versions` release:
 # 1. Bring up Artifactory + bootstrap empty repo (no fixture).
 docker compose -f test/docker-compose.yml up -d
 # wait for it to be healthy, then mint a token via UI or with the bootstrap script
-# (it'll fail at the upload step — that's fine, it still creates the repo + token)
+# (it'll fail at the upload step; that's fine, it still creates the repo + token)
 
 # 2. Run the real sync script with the JFrog CLI configured against localhost:
 jf c add local-art --url=http://localhost:8082/artifactory --user=admin --password=password --interactive=false
@@ -102,7 +102,7 @@ ART_SERVER_ID=local-art ART_REPO=example-repo-local \
   ART_BASE_URL=http://localhost:8082/artifactory \
   ./scripts/sync-to-artifactory.sh
 
-# 3. Run the action with python-version=3.11 — it'll download the real
+# 3. Run the action with python-version=3.11. It'll download the real
 #    tarball from your local Artifactory and run the real upstream setup.sh.
 ```
 
