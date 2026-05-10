@@ -52,7 +52,7 @@ docker compose -f test/docker-compose.yml down -v
 | `bootstrap-artifactory.sh` | Waits for the API + repo, mints a token, uploads the fixture |
 | `run-e2e.sh` | Orchestrates everything and asserts on action outputs |
 
-The fixture also includes stub `actionlint` and `shellcheck` archives, uploaded to `<repo>/lint-tools/`. These let the project's own dev-tooling scripts (`scripts/run-shellcheck.sh`, `scripts/run-actionlint.sh`) resolve against the local Artifactory exactly the way they do in production. They aren't exercised by `run-e2e.sh` — see "Verifying lint-tool download path" below if you want to test that flow manually.
+The fixture also includes stub `actionlint` and `shellcheck` archives, uploaded to `<repo>/lint-tools/`. These let the project's own dev-tooling scripts (`scripts/run-shellcheck.sh`, `scripts/run-actionlint.sh`) resolve against the local Artifactory exactly the way they do in production. They aren't exercised by `run-e2e.sh`. See "Verifying lint-tool download path" below if you want to test that flow manually.
 
 ## Generated `test/.env`
 
