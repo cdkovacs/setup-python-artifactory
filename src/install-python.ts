@@ -3,8 +3,10 @@ import * as fs from 'fs';
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 import * as tc from '@actions/tool-cache';
-import {ArtifactoryConfig, rewriteDownloadUrl} from './http';
-import {ManifestFile, ManifestRelease, IS_WINDOWS} from './utils';
+import type {ArtifactoryConfig} from './http';
+import {rewriteDownloadUrl} from './http';
+import type {ManifestFile, ManifestRelease} from './utils';
+import {IS_WINDOWS} from './utils';
 
 export interface InstalledPython {
   version: string;

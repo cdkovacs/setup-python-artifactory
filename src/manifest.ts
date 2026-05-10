@@ -1,14 +1,9 @@
 import * as core from '@actions/core';
 import * as semver from 'semver';
-import {ArtifactoryConfig, buildClient, manifestUrl} from './http';
-import {
-  ManifestFile,
-  ManifestRelease,
-  getLinuxOSReleaseInfo,
-  getOSArch,
-  getOSPlatform,
-  IS_LINUX
-} from './utils';
+import type {ArtifactoryConfig} from './http';
+import {buildClient, manifestUrl} from './http';
+import type {ManifestFile, ManifestRelease} from './utils';
+import {getLinuxOSReleaseInfo, getOSArch, getOSPlatform, IS_LINUX} from './utils';
 
 export async function fetchManifest(cfg: ArtifactoryConfig): Promise<ManifestRelease[]> {
   const url = manifestUrl(cfg);
@@ -16,9 +11,7 @@ export async function fetchManifest(cfg: ArtifactoryConfig): Promise<ManifestRel
   const client = buildClient(cfg.token);
   const response = await client.getJson<ManifestRelease[]>(url);
   if (response.statusCode !== 200 || !response.result) {
-    throw new Error(
-      `Failed to fetch manifest from ${url}: HTTP ${response.statusCode}`
-    );
+    throw new Error(`Failed to fetch manifest from ${url}: HTTP ${response.statusCode}`);
   }
   return response.result;
 }
@@ -35,19 +28,13 @@ export function normalizeRange(input: string, allowPrereleases: boolean): string
   }
   if (/^\d+\.x$/.test(trimmed)) {
     const major = trimmed.split('.')[0];
-    return allowPrereleases
-      ? `>=${major}.0.0-0 <${Number(major) + 1}.0.0-0`
-      : `${major}.x`;
+    return allowPrereleases ? `>=${major}.0.0-0 <${Number(major) + 1}.0.0-0` : `${major}.x`;
   }
   if (/^\d+\.\d+$/.test(trimmed)) {
-    return allowPrereleases
-      ? `>=${trimmed}.0-0 <${nextMinor(trimmed)}`
-      : `~${trimmed}.0`;
+    return allowPrereleases ? `>=${trimmed}.0-0 <${nextMinor(trimmed)}` : `~${trimmed}.0`;
   }
   if (/^\d+$/.test(trimmed)) {
-    return allowPrereleases
-      ? `>=${trimmed}.0.0-0 <${Number(trimmed) + 1}.0.0-0`
-      : `${trimmed}.x`;
+    return allowPrereleases ? `>=${trimmed}.0.0-0 <${Number(trimmed) + 1}.0.0-0` : `${trimmed}.x`;
   }
   return trimmed;
 }
@@ -79,9 +66,7 @@ export function findMatchingRelease(
 
   const candidates = manifest
     .filter(r => opts.allowPrereleases || r.stable)
-    .filter(r =>
-      semver.satisfies(r.version, range, {includePrerelease: opts.allowPrereleases})
-    )
+    .filter(r => semver.satisfies(r.version, range, {includePrerelease: opts.allowPrereleases}))
     .sort((a, b) => semver.rcompare(a.version, b.version));
 
   for (const release of candidates) {

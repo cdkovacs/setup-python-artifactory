@@ -4,3 +4,11 @@ lib/
 .DS_Store
 .env
 coverage/
+bin/
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
