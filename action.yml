@@ -44,7 +44,7 @@ outputs:
   cache-hit:
     description: 'True when the requested version was already present in the runner tool cache.'
 runs:
-  using: 'node20'
+  using: 'node24'
   main: 'dist/index.js'
 branding:
   icon: 'download'

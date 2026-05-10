@@ -102,8 +102,8 @@ jobs:
   sync:
     runs-on: [self-hosted, internet-egress]
     steps:
-      - uses: actions/checkout@v4
-      - uses: jfrog/setup-jfrog-cli@v4
+      - uses: actions/checkout@v6
+      - uses: jfrog/setup-jfrog-cli@v5
         env:
           JF_URL: ${{ vars.ARTIFACTORY_URL }}
           JF_ACCESS_TOKEN: ${{ secrets.ARTIFACTORY_SYNC_TOKEN }}
