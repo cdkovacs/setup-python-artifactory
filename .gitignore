@@ -12,3 +12,11 @@ bin/
 *.iws
 *.ipr
 out/
+
+# nektos/act inputs and outputs
+.secrets
+.vars
+sync-cache
+
+# directory used by sync script
+.sync-cache

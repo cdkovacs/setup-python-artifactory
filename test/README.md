@@ -113,23 +113,82 @@ Both commands should download from the local Artifactory, cache into `./bin/`, a
 
 ## Real Python release (manual)
 
-To test against an actual `actions/python-versions` release:
+To test against an actual `actions/python-versions` release using [nektos/act](https://github.com/nektos/act):
 
 ```bash
-# 1. Bring up Artifactory + bootstrap empty repo (no fixture).
+# 1. Bring up Artifactory.
 docker compose -f test/docker-compose.yml up -d
-# wait for it to be healthy, then mint a token via UI or with the bootstrap script
-# (it'll fail at the upload step; that's fine, it still creates the repo + token)
+# The compose healthcheck only pings the router. Wait for the artifactory
+# service itself to be ready, since /api/security/token (used below) lives
+# behind it and 404s during early boot:
+until [ "$(curl -s -o /dev/null -w '%{http_code}' \
+  http://localhost:8082/artifactory/api/system/ping)" = "200" ]; do sleep 2; done
 
-# 2. Run the real sync script with the JFrog CLI configured against localhost:
-jf c add local-art --url=http://localhost:8082/artifactory --user=admin --password=password --interactive=false
+# 2. Bootstrap the repo and mint an access token. The script prints
+#    "ARTIFACTORY_TOKEN=..." on stdout, so eval it to pick the token up:
+eval "$(VERSION=3.11.99 \
+  ART_URL=http://127.0.0.1:8082/artifactory \
+  ART_REPO=example-repo-local \
+  FIXTURE_DIR=./test/.fixture \
+  ./test/bootstrap-artifactory.sh)"
+# $ARTIFACTORY_TOKEN is now set in your shell.
+
+# 3. Configure the JFrog CLI against localhost using that token.
+#    Two gotchas worth knowing:
+#      a. --url is the platform URL, so do NOT append /artifactory. If you do,
+#         uploads hit /artifactory/artifactory/<repo>/... and Tomcat returns
+#         405 Method Not Allowed. Use --artifactory-url=.../artifactory if you
+#         prefer the explicit form.
+#      b. Using --access-token avoids the /api/security/encryptedPassword
+#         endpoint that jf c add otherwise hits with --user/--password (it
+#         404s on early-boot OSS; --enc-password=false is the alternative).
+jf c add local-art \
+  --url=http://localhost:8082 \
+  --access-token="$ARTIFACTORY_TOKEN" \
+  --interactive=false
+jf rt ping --server-id=local-art   # expect: OK
+
+# 4. Run the real sync script.
 ART_SERVER_ID=local-art ART_REPO=example-repo-local \
   VERSION_LINES=3.11 PLATFORMS=linux ARCHES=x64 \
   ART_BASE_URL=http://localhost:8082/artifactory \
   ./scripts/sync-to-artifactory.sh
 
-# 3. Run the action with python-version=3.11. It'll download the real
-#    tarball from your local Artifactory and run the real upstream setup.sh.
+# 5. Run the action with python-version=3.11. It'll download the real
+#    tarball from your local Artifactory and run the real upstream setup.sh
+ARTIFACTORY_URL=http://host.docker.internal:8082/artifactory
+ARTIFACTORY_REPO=example-repo-local
+EOF
+cat > .secrets <<EOF
+ARTIFACTORY_TOKEN=$ARTIFACTORY_TOKEN
+EOF
+
+act workflow_dispatch \
+    -W .github/workflows/act-e2e.yml \
+    -P ubuntu-latest=catthehacker/ubuntu:act-latest \
+    --secret-file .secrets \
+    --var-file .vars \
+    --container-options "--add-host=host.docker.internal:host-gateway"
+
+.
+```
+
+Note on token scope: `bootstrap-artifactory.sh` prefers
+`scope=member-of-groups:readers` and only falls back to
+`applied-permissions/admin` if the readers group is missing. On a fresh
+OSS 7.x instance the readers path succeeds, so `$ARTIFACTORY_TOKEN` is
+read-only and step 4 will 403 with `User token:admin is not permitted to
+deploy ...`. If that happens, mint a deploy-scoped token and reconfigure
+the CLI before re-running:
+
+```bash
+DEPLOY_TOKEN=$(curl -s -u admin:password \
+  -X POST http://localhost:8082/artifactory/api/security/token \
+  -d 'username=admin&scope=applied-permissions/admin&expires_in=3600' \
+  | jq -r .access_token)
+jf c remove local-art --quiet
+jf c add local-art --url=http://localhost:8082 \
+  --access-token="$DEPLOY_TOKEN" --interactive=false
 ```
 
 This requires internet egress on the host running the sync script (to pull
