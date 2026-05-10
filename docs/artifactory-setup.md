@@ -150,7 +150,30 @@ A rough estimate per minor Python version on Linux+Windows x64, including the 5 
 
 Plan ~2–3 GB of headroom and rely on Artifactory's storage policies for cleanup. Old patch releases stay valid (workflows pin to them), so don't aggressively prune.
 
-## 7. Rotation and incident response
+## 7. Lint tool mirror
+
+The repo's own dev tooling (`actionlint`, `shellcheck`) is fetched from the same Artifactory generic repo at `<repo>/lint-tools/<filename>`. This keeps developer machines and lint CI air-gap-safe, the same way the action itself fetches Python.
+
+Mirror them once (and again whenever you bump versions) from a host that has both internet egress and Artifactory access:
+
+```bash
+export ART_SERVER_ID=internal-artifactory
+export ART_REPO=python-binaries-generic-local
+# Defaults: actionlint 1.7.7, shellcheck v0.10.0, linux+darwin, x86_64/aarch64 (shellcheck) and amd64/arm64 (actionlint).
+./scripts/sync-lint-tools-to-artifactory.sh
+```
+
+Override any dimension via env: `ACTIONLINT_VERSIONS`, `SHELLCHECK_VERSIONS`, `PLATFORMS`, `ACTIONLINT_ARCHES`, `SHELLCHECK_ARCHES` (all comma-separated). Files land at:
+
+```
+<repo>/lint-tools/shellcheck-v0.10.0.linux.x86_64.tar.xz
+<repo>/lint-tools/actionlint_1.7.7_linux_amd64.tar.gz
+...
+```
+
+Developers and CI then run `npm run lint:shell` / `npm run lint:actions` with `ARTIFACTORY_URL`, `ARTIFACTORY_REPO`, and `ARTIFACTORY_TOKEN` exported (see the project README).
+
+## 8. Rotation and incident response
 
 - **Token rotation**: rotate the runner-side token at least quarterly. Update the `ARTIFACTORY_TOKEN` org secret. No action change needed.
 - **Bad mirror**: if a sync run uploads a corrupted file, re-run the sync. The script idempotently re-checks Artifactory and re-uploads anything missing or with a checksum mismatch. To force re-upload, delete the affected file from Artifactory first.

@@ -89,6 +89,14 @@ npm run lint:actions   # actionlint only (workflow YAML)
 npm run lint:shell     # shellcheck only
 ```
 
-`lint:actions` and `lint:shell` auto-download the official `actionlint` and `shellcheck` binaries into `./bin/` (gitignored) on first run; no system install needed. Pin specific releases with `ACTIONLINT_VERSION=1.7.12` / `SHELLCHECK_VERSION=v0.10.0`.
+`lint:actions` and `lint:shell` fetch the `actionlint` and `shellcheck` binaries from the Artifactory mirror into `./bin/` (gitignored) on first run; there is no fallback to github.com, since this project targets air-gapped runners. Set:
 
-CI runs the same npm scripts (see `.github/workflows/lint.yml`). Project-specific actionlint config (allowed self-hosted runner labels, known config vars) lives in `.github/actionlint.yaml`.
+```bash
+export ARTIFACTORY_URL=https://artifactory.example.com/artifactory
+export ARTIFACTORY_REPO=python-binaries-generic-local
+export ARTIFACTORY_TOKEN=<read-token>
+```
+
+Pin specific releases with `ACTIONLINT_VERSION=1.7.7` (no leading `v`) or `SHELLCHECK_VERSION=v0.10.0`. Both must be present under `<repo>/lint-tools/`; see [docs/artifactory-setup.md](docs/artifactory-setup.md#lint-tool-mirror) for how to populate them with `scripts/sync-lint-tools-to-artifactory.sh`.
+
+CI runs the same npm scripts (see `.github/workflows/lint.yml`) and reads `ARTIFACTORY_URL` / `ARTIFACTORY_REPO` from repo Variables and `ARTIFACTORY_TOKEN` from a Secret. Project-specific actionlint config (allowed self-hosted runner labels, known config vars) lives in `.github/actionlint.yaml`.
