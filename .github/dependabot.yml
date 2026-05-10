@@ -15,4 +15,10 @@ updates:
       # ecosystem catch up.
       - dependency-name: "@actions/http-client"
         versions: ["4.x"]
-
+      # @actions/tool-cache v3+ is ESM-only; ncc 0.38 + our CommonJS build
+      # can't consume it. Block major bumps until we migrate.
+      - dependency-name: "@actions/tool-cache"
+        update-types: ["version-update:semver-major"]
+      # @actions/io v2+ is ESM-only; same constraint as @actions/tool-cache.
+      - dependency-name: "@actions/io"
+        update-types: ["version-update:semver-major"]
