@@ -155,7 +155,12 @@ ART_SERVER_ID=local-art ART_REPO=example-repo-local \
   ./scripts/sync-to-artifactory.sh
 
 # 5. Run the action with python-version=3.11. It'll download the real
-#    tarball from your local Artifactory and run the real upstream setup.sh
+#    tarball from your local Artifactory and run the real upstream setup.sh.
+#    The act workflow lives under test/workflows/ so actionlint (which only
+#    scans .github/workflows/**) leaves it alone, and GitHub never runs it.
+#    host.docker.internal + --add-host=...:host-gateway is how the job
+#    container reaches Artifactory on the host's 127.0.0.1:8082.
+cat > .vars <<EOF
 ARTIFACTORY_URL=http://host.docker.internal:8082/artifactory
 ARTIFACTORY_REPO=example-repo-local
 EOF
@@ -164,13 +169,11 @@ ARTIFACTORY_TOKEN=$ARTIFACTORY_TOKEN
 EOF
 
 act workflow_dispatch \
-    -W .github/workflows/act-e2e.yml \
-    -P ubuntu-latest=catthehacker/ubuntu:act-latest \
-    --secret-file .secrets \
-    --var-file .vars \
-    --container-options "--add-host=host.docker.internal:host-gateway"
-
-.
+  -W test/workflows/act-e2e.yml \
+  -P ubuntu-latest=catthehacker/ubuntu:act-latest \
+  --secret-file .secrets \
+  --var-file .vars \
+  --container-options "--add-host=host.docker.internal:host-gateway"
 ```
 
 Note on token scope: `bootstrap-artifactory.sh` prefers
