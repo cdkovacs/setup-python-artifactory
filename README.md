@@ -1,5 +1,7 @@
 # setup-python-artifactory
 
+[![e2e](https://github.com/cdkovacs/setup-python-artifactory/actions/workflows/e2e.yml/badge.svg?branch=main)](https://github.com/cdkovacs/setup-python-artifactory/actions/workflows/e2e.yml)
+[![Lint](https://github.com/cdkovacs/setup-python-artifactory/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/cdkovacs/setup-python-artifactory/actions/workflows/lint.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Drop-in replacement for [`actions/setup-python`](https://github.com/actions/setup-python) that resolves and downloads Python from a JFrog Artifactory mirror instead of from GitHub Releases. Designed for air-gapped GitHub Enterprise Server runners, but works anywhere `actions/setup-python` does. Uses the same manifest schema as [`actions/python-versions`](https://github.com/actions/python-versions), runs the upstream `setup.sh` / `setup.ps1` from the tarball, and registers the install in the runner tool cache so `pip`, `tox`, and other follow-on steps work unchanged.
