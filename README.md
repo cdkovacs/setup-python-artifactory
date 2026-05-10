@@ -58,34 +58,16 @@ If you need any of the above, the architecture supports adding them — open an 
 
 ## How it works
 
-```
-┌───────────────────────────┐         ┌──────────────────────────┐
-│  github.com               │  HTTPS  │  Sync host (egress + VPN)│
-│  actions/python-versions  │────────▶│  scripts/sync-to-         │
-│  (releases + manifest)    │         │  artifactory.sh          │
-└───────────────────────────┘         └──────────┬───────────────┘
-                                                 │ jfrog CLI
-                                                 ▼
-                                      ┌──────────────────────────┐
-                                      │  Artifactory             │
-                                      │  python-binaries-...     │
-                                      │  ├── versions-manifest.json (URLs rewritten)
-                                      │  └── python-3.11.9-linux-22.04-x64.tar.gz, ...
-                                      └──────────┬───────────────┘
-                                                 │ HTTPS + Bearer token
-                                                 ▼
-                                      ┌──────────────────────────┐
-                                      │  Self-hosted runner      │
-                                      │  (air-gapped except      │
-                                      │   for Artifactory)       │
-                                      │                          │
-                                      │  setup-python-artifactory│
-                                      │   ├─ fetch manifest      │
-                                      │   ├─ resolve via semver  │
-                                      │   ├─ download tarball    │
-                                      │   ├─ run setup.sh        │
-                                      │   └─ tc.find('Python', …)│
-                                      └──────────────────────────┘
+```mermaid
+flowchart TD
+    GH["<b>github.com</b><br/>actions/python-versions<br/><i>(releases + manifest)</i>"]
+    SYNC["<b>Sync host</b> <i>(egress + VPN)</i><br/>scripts/sync-to-artifactory.sh"]
+    ART["<b>Artifactory</b><br/>python-binaries-...<br/>• versions-manifest.json <i>(URLs rewritten)</i><br/>• python-3.11.9-linux-22.04-x64.tar.gz, ..."]
+    RUNNER["<b>Self-hosted runner</b><br/><i>(air-gapped except for Artifactory)</i><br/><br/><b>setup-python-artifactory</b><br/>1. fetch manifest<br/>2. resolve via semver<br/>3. download tarball<br/>4. run setup.sh<br/>5. tc.find('Python', …)"]
+
+    GH -- HTTPS --> SYNC
+    SYNC -- jfrog CLI --> ART
+    ART -- "HTTPS + Bearer token" --> RUNNER
 ```
 
 ## Development

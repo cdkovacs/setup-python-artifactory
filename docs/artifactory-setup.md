@@ -136,8 +136,6 @@ Self-hosted runners need outbound HTTPS to:
 
 - `artifactory.example.com` (or wherever you host) on 443.
 
-That's it — nothing else from this action calls out. (Your *workflows* will still need access to whatever package repos they use: PyPI mirror, npm registry, etc.)
-
 If your runners go through a corporate proxy, set `https_proxy` / `HTTPS_PROXY` in the runner environment; `@actions/http-client` and `@actions/tool-cache` honor it.
 
 ## 6. Storage sizing
