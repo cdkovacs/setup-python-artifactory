@@ -1,26 +1,54 @@
 # setup-python-artifactory
 
-Air-gapped drop-in replacement for [`actions/setup-python`](https://github.com/actions/setup-python) that resolves and downloads Python from a JFrog Artifactory mirror instead of from GitHub Releases.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-It uses the same manifest schema as [`actions/python-versions`](https://github.com/actions/python-versions), runs the upstream `setup.sh` / `setup.ps1` from the tarball, and registers the install in the runner tool cache (`RUNNER_TOOL_CACHE`), so subsequent steps (`pip`, `tox`, etc.) work unchanged.
+Drop-in replacement for [`actions/setup-python`](https://github.com/actions/setup-python) that resolves and downloads Python from a JFrog Artifactory mirror instead of from GitHub Releases. Designed for air-gapped GitHub Enterprise Server runners, but works anywhere `actions/setup-python` does. Uses the same manifest schema as [`actions/python-versions`](https://github.com/actions/python-versions), runs the upstream `setup.sh` / `setup.ps1` from the tarball, and registers the install in the runner tool cache so `pip`, `tox`, and other follow-on steps work unchanged.
 
-## Quick start
-
-1. Set up Artifactory and run the sync job. See [docs/artifactory-setup.md](docs/artifactory-setup.md).
-2. Publish this action to an internal repo on your GitHub Enterprise Server. See [docs/publishing.md](docs/publishing.md).
-3. Use it from a workflow:
+## Usage
 
 ```yaml
-- name: Set up Python
-  uses: your-org/setup-python-artifactory@v1
+- uses: actions/checkout@v6
+- uses: your-org/setup-python-artifactory@v1
   with:
     python-version: '3.11'
-    artifactory-url: https://artifactory.example.com/artifactory
-    artifactory-repo: python-binaries-generic-local
+    artifactory-url: ${{ vars.ARTIFACTORY_URL }}
+    artifactory-repo: ${{ vars.ARTIFACTORY_REPO }}
     artifactory-token: ${{ secrets.ARTIFACTORY_TOKEN }}
-
 - run: python --version
 ```
+
+### Matrix
+
+```yaml
+jobs:
+  test:
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: your-org/setup-python-artifactory@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+          artifactory-url: ${{ vars.ARTIFACTORY_URL }}
+          artifactory-repo: ${{ vars.ARTIFACTORY_REPO }}
+          artifactory-token: ${{ secrets.ARTIFACTORY_TOKEN }}
+      - run: python --version
+```
+
+### Reading the version from a file
+
+```yaml
+- uses: your-org/setup-python-artifactory@v1
+  with:
+    python-version-file: .python-version
+    artifactory-url: ${{ vars.ARTIFACTORY_URL }}
+    artifactory-repo: ${{ vars.ARTIFACTORY_REPO }}
+    artifactory-token: ${{ secrets.ARTIFACTORY_TOKEN }}
+```
+
+`python-version-file` accepts `.python-version`, `pyproject.toml` (reads `requires-python`), and `Pipfile` (reads `python_version`).
 
 ## Inputs
 
@@ -52,7 +80,7 @@ This action is intentionally smaller than upstream:
 - **CPython only.** No PyPy or GraalPy.
 - **No pip caching.** Use `actions/cache` directly against your Artifactory PyPI repo.
 - **No problem matchers.** Add them at the workflow level if needed.
-- **No freethreaded builds** are mirrored by default. Toggle `INCLUDE_FREETHREADED=true` on the sync job to publish them; the action skips them in matching.
+- **No freethreaded builds** are mirrored by default. Toggle `INCLUDE_FREETHREADED=true` on the sync job to publish them. The action skips them in matching.
 
 If you need any of the above, the architecture supports adding them. Open an issue.
 
@@ -70,67 +98,19 @@ flowchart TD
     ART -- "HTTPS + Bearer token" --> RUNNER
 ```
 
-## Required GHES action mirrors
+## Setup
 
-Air-gapped GHES runners can't resolve `uses: <owner>/<repo>@<tag>` against `github.com`. Every third-party action referenced by this project's workflows (and by the example workflows in [docs/](docs/)) must be mirrored into your internal GHES under the same owner/repo path and tag, with the action's compiled `dist/` intact, so the existing `uses:` lines keep resolving locally.
+The action requires an Artifactory instance populated with the Python tarballs and a `versions-manifest.json`. For first-time setup:
 
-| Action                     | Pinned at | Purpose                                                                                                     | Upstream                                   |
-|----------------------------|-----------|-------------------------------------------------------------------------------------------------------------|--------------------------------------------|
-| `actions/checkout@v6`      | `v6`      | Checkout source in CI lint, sync, and publish workflows                                                     | <https://github.com/actions/checkout>      |
-| `actions/setup-node@v6`    | `v6`      | Install Node.js for `npm ci` / `npm run build` and lint                                                     | <https://github.com/actions/setup-node>    |
-| `jfrog/setup-jfrog-cli@v5` | `v5`      | Provision `jf` CLI on the sync runner (only if you run `scripts/sync-to-artifactory.sh` as a GHES workflow) | <https://github.com/jfrog/setup-jfrog-cli> |
+- [docs/artifactory-setup.md](docs/artifactory-setup.md): Set up the Artifactory repo and run the initial sync from `actions/python-versions`.
+- [docs/publishing.md](docs/publishing.md): Publish this action to your internal GHES, including the list of third-party actions that must also be mirrored.
 
-These tags are all on the Node.js 24 line, matching the `node24` runtime declared in this repo's `action.yml`. Older `@v4` tags use Node.js 20, which GitHub forces to Node.js 24 starting June 2nd, 2026 and removes from the runner on September 16th, 2026 ([deprecation notice](https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/)). GHES self-hosted runners need to be on `actions/runner` v2.327.1 or later for Node.js 24 compatibility.
+## Contributing
 
-Where this list comes from:
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow, build steps, and linting.
 
-- `.github/workflows/lint.yml` references `actions/checkout` and `actions/setup-node`.
-- `docs/artifactory-setup.md` (sync-from-Actions example) references `actions/checkout` and `jfrog/setup-jfrog-cli`.
-- `docs/publishing.md` (rebuild-and-tag example) references `actions/checkout` and `actions/setup-node`.
+For security issues, follow [SECURITY.md](SECURITY.md). Please do not file public issues for security problems.
 
-This action itself bundles its Node deps via `ncc` into `dist/index.js`, so consumers calling `uses: your-org/setup-python-artifactory@v1` pick up no transitive action dependencies beyond the three above.
+## License
 
-### Mirroring approach
-
-The simplest path is a one-shot script per action: clone from `github.com/<owner>/<repo>` at the pinned tag, push to `https://<ghes>/<owner>/<repo>` preserving the tag, and rerun whenever you bump a major. Keep `dist/` from upstream, since these are JavaScript actions and the runner executes `dist/index.js` directly.
-
-If your GHES org name doesn't match upstream (e.g. you mirror under `internal-tools/` rather than `actions/`), update the `uses:` lines in this repo's workflows and the docs examples to match. Don't rewrite them upstream, because public github.com CI for this repo relies on the original paths.
-
-## Development
-
-```bash
-npm ci
-npm run build      # produces dist/index.js (committed)
-```
-
-`dist/index.js` is required at runtime. GitHub Actions doesn't `npm install` for you, so always commit the rebuilt `dist/` alongside source changes.
-
-### Linting
-
-```bash
-npm run lint           # everything: typecheck, eslint, prettier --check, actionlint, shellcheck
-npm run format         # auto-fix prettier formatting
-npm run lint:ts        # eslint only
-npm run lint:actions   # actionlint only (workflow YAML)
-npm run lint:shell     # shellcheck only
-```
-
-`lint:actions` and `lint:shell` auto-download the `actionlint` and `shellcheck` binaries into `./bin/` (gitignored) on first run. The source is selected automatically:
-
-| Where you're running                                               | Source                                        |
-|--------------------------------------------------------------------|-----------------------------------------------|
-| Public github.com Actions (`GITHUB_SERVER_URL=https://github.com`) | upstream GitHub releases without auth         |
-| GHES Actions or local dev with `ARTIFACTORY_URL` set               | Artifactory mirror under `<repo>/lint-tools/` |
-| Local dev with no Artifactory configured                           | upstream GitHub releases                      |
-
-For the Artifactory path, set:
-
-```bash
-export ARTIFACTORY_URL=https://artifactory.example.com/artifactory
-export ARTIFACTORY_REPO=python-binaries-generic-local
-export ARTIFACTORY_TOKEN=<read-token>
-```
-
-Pin specific releases with `ACTIONLINT_VERSION=1.7.7` (no leading `v`) or `SHELLCHECK_VERSION=v0.10.0`. When using the mirror, both must already be present under `<repo>/lint-tools/`; see [docs/artifactory-setup.md](docs/artifactory-setup.md#7-lint-tool-mirror) for how to populate them with `scripts/sync-lint-tools-to-artifactory.sh`.
-
-CI for this repo on github.com uses the upstream path (no Artifactory secrets needed). The same workflow (`.github/workflows/lint.yml`) also passes `ARTIFACTORY_URL`/`ARTIFACTORY_REPO`/`ARTIFACTORY_TOKEN` from Variables/Secrets through to the lint steps, so a fork that runs lint on a GHES self-hosted runner will automatically use the mirror once those values are configured. Project-specific actionlint config (allowed self-hosted runner labels, known config vars) lives in `.github/actionlint.yaml`.
+[MIT](LICENSE)

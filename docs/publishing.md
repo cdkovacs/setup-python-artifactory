@@ -75,4 +75,28 @@ jobs:
           fi
 ```
 
-(You'll need an internal mirror of `actions/checkout` and `actions/setup-node` to make this run; a small bootstrapping concern that applies to any GHES + air-gap setup.)
+## Required action mirrors
+
+Air-gapped GHES runners can't resolve `uses: <owner>/<repo>@<tag>` against `github.com`. Every third-party action referenced by this project's workflows (and by the example workflows in the rest of [docs/](.)) must be mirrored into your internal GHES under the same owner/repo path and tag, with the action's compiled `dist/` intact, so the existing `uses:` lines keep resolving locally.
+
+| Action                     | Pinned at | Purpose                                                                                                     | Upstream                                   |
+|----------------------------|-----------|-------------------------------------------------------------------------------------------------------------|--------------------------------------------|
+| `actions/checkout@v6`      | `v6`      | Checkout source in CI lint, sync, and publish workflows                                                     | <https://github.com/actions/checkout>      |
+| `actions/setup-node@v6`    | `v6`      | Install Node.js for `npm ci` / `npm run build` and lint                                                     | <https://github.com/actions/setup-node>    |
+| `jfrog/setup-jfrog-cli@v5` | `v5`      | Provision `jf` CLI on the sync runner (only if you run `scripts/sync-to-artifactory.sh` as a GHES workflow) | <https://github.com/jfrog/setup-jfrog-cli> |
+
+These tags are all on the Node.js 24 line, matching the `node24` runtime declared in this repo's `action.yml`. Older `@v4` tags use Node.js 20, which GitHub forces to Node.js 24 starting June 2nd, 2026 and removes from the runner on September 16th, 2026 ([deprecation notice](https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/)). GHES self-hosted runners need to be on `actions/runner` v2.327.1 or later for Node.js 24 compatibility.
+
+Where this list comes from:
+
+- `.github/workflows/lint.yml` references `actions/checkout` and `actions/setup-node`.
+- [artifactory-setup.md](artifactory-setup.md) (sync-from-Actions example) references `actions/checkout` and `jfrog/setup-jfrog-cli`.
+- This doc's [Release workflow](#release-workflow-optional) example references `actions/checkout` and `actions/setup-node`.
+
+The `setup-python-artifactory` action itself bundles its Node deps via `ncc` into `dist/index.js`, so consumers calling `uses: your-org/setup-python-artifactory@v1` pick up no transitive action dependencies beyond the three above.
+
+### Mirroring approach
+
+The simplest path is a one-shot script per action: clone from `github.com/<owner>/<repo>` at the pinned tag, push to `https://<ghes>/<owner>/<repo>` preserving the tag, and rerun whenever you bump a major. Keep `dist/` from upstream, since these are JavaScript actions and the runner executes `dist/index.js` directly.
+
+If your GHES org name doesn't match upstream (e.g. you mirror under `internal-tools/` rather than `actions/`), update the `uses:` lines in this repo's workflows and the docs examples to match. Don't rewrite them upstream, because public github.com CI for this repo relies on the original paths.

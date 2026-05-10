@@ -1,6 +1,6 @@
 name: 'Setup Python (Artifactory)'
-description: 'Set up a specific version of Python from a JFrog Artifactory mirror. Air-gap friendly drop-in replacement for actions/setup-python.'
-author: 'internal'
+description: 'Air-gap-friendly drop-in replacement for actions/setup-python that fetches Python from a JFrog Artifactory mirror.'
+author: 'Christopher Kovacs'
 inputs:
   python-version:
     description: 'Version range or exact version of Python to use, using SemVer syntax. Reads from python-version-file if omitted.'
