@@ -24,26 +24,26 @@ It uses the same manifest schema as [`actions/python-versions`](https://github.c
 
 ## Inputs
 
-| Name | Required | Default | Description |
-| --- | --- | --- | --- |
-| `python-version` | conditional | _none_ | Version range or exact version (`3.11`, `3.11.x`, `>=3.10 <3.13`, `3.11.9`). One of `python-version` / `python-version-file` is required. |
-| `python-version-file` | no | _none_ | Path to a file containing the version (`.python-version`, `pyproject.toml`'s `requires-python`, `Pipfile`'s `python_version`). Falls back to auto-detection if neither input is set. |
-| `architecture` | no | runner arch | `x64`, `x86`, or `arm64`. |
-| `check-latest` | no | `false` | Re-resolve against the manifest even if a satisfying version is in the tool cache. |
-| `allow-prereleases` | no | `false` | Match prereleases when no GA version satisfies the range. |
-| `update-environment` | no | `true` | Update `PATH`, `pythonLocation`, `Python_ROOT_DIR`, `PKG_CONFIG_PATH`. |
-| `artifactory-url` | yes | _none_ | Base URL, e.g. `https://artifactory.example.com/artifactory`. |
-| `artifactory-repo` | yes | _none_ | Generic repo name holding the manifest + tarballs. |
-| `artifactory-token` | yes | _none_ | Bearer token (Artifactory access token / identity token). Pass via a secret. |
-| `manifest-path` | no | `versions-manifest.json` | Path within the repo to the manifest. |
+| Name                  | Required    | Default                  | Description                                                                                                                                                                          |
+|-----------------------|-------------|--------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `python-version`      | conditional | _none_                   | Version range or exact version (`3.11`, `3.11.x`, `>=3.10 <3.13`, `3.11.9`). One of `python-version` / `python-version-file` is required.                                            |
+| `python-version-file` | no          | _none_                   | Path to a file containing the version (`.python-version`, `pyproject.toml`'s `requires-python`, `Pipfile`'s `python_version`). Falls back to auto-detection if neither input is set. |
+| `architecture`        | no          | runner arch              | `x64`, `x86`, or `arm64`.                                                                                                                                                            |
+| `check-latest`        | no          | `false`                  | Re-resolve against the manifest even if a satisfying version is in the tool cache.                                                                                                   |
+| `allow-prereleases`   | no          | `false`                  | Match prereleases when no GA version satisfies the range.                                                                                                                            |
+| `update-environment`  | no          | `true`                   | Update `PATH`, `pythonLocation`, `Python_ROOT_DIR`, `PKG_CONFIG_PATH`.                                                                                                               |
+| `artifactory-url`     | yes         | _none_                   | Base URL, e.g. `https://artifactory.example.com/artifactory`.                                                                                                                        |
+| `artifactory-repo`    | yes         | _none_                   | Generic repo name holding the manifest + tarballs.                                                                                                                                   |
+| `artifactory-token`   | yes         | _none_                   | Bearer token (Artifactory access token / identity token). Pass via a secret.                                                                                                         |
+| `manifest-path`       | no          | `versions-manifest.json` | Path within the repo to the manifest.                                                                                                                                                |
 
 ## Outputs
 
-| Name | Description |
-| --- | --- |
-| `python-version` | Installed Python version (e.g. `3.11.9`). |
-| `python-path` | Absolute path to the `python` executable. |
-| `cache-hit` | `true` if the requested version was already in the runner tool cache. |
+| Name             | Description                                                           |
+|------------------|-----------------------------------------------------------------------|
+| `python-version` | Installed Python version (e.g. `3.11.9`).                             |
+| `python-path`    | Absolute path to the `python` executable.                             |
+| `cache-hit`      | `true` if the requested version was already in the runner tool cache. |
 
 ## Differences from upstream `actions/setup-python`
 
@@ -74,11 +74,13 @@ flowchart TD
 
 Air-gapped GHES runners can't resolve `uses: <owner>/<repo>@<tag>` against `github.com`. Every third-party action referenced by this project's workflows (and by the example workflows in [docs/](docs/)) must be mirrored into your internal GHES under the same owner/repo path and tag, with the action's compiled `dist/` intact, so the existing `uses:` lines keep resolving locally.
 
-| Action | Pinned at | Purpose | Upstream |
-| --- | --- | --- | --- |
-| `actions/checkout@v4` | `v4` | Checkout source in CI lint, sync, and publish workflows | <https://github.com/actions/checkout> |
-| `actions/setup-node@v4` | `v4` | Install Node.js for `npm ci` / `npm run build` and lint | <https://github.com/actions/setup-node> |
-| `jfrog/setup-jfrog-cli@v4` | `v4` | Provision `jf` CLI on the sync runner (only if you run `scripts/sync-to-artifactory.sh` as a GHES workflow) | <https://github.com/jfrog/setup-jfrog-cli> |
+| Action                     | Pinned at | Purpose                                                                                                     | Upstream                                   |
+|----------------------------|-----------|-------------------------------------------------------------------------------------------------------------|--------------------------------------------|
+| `actions/checkout@v6`      | `v6`      | Checkout source in CI lint, sync, and publish workflows                                                     | <https://github.com/actions/checkout>      |
+| `actions/setup-node@v6`    | `v6`      | Install Node.js for `npm ci` / `npm run build` and lint                                                     | <https://github.com/actions/setup-node>    |
+| `jfrog/setup-jfrog-cli@v5` | `v5`      | Provision `jf` CLI on the sync runner (only if you run `scripts/sync-to-artifactory.sh` as a GHES workflow) | <https://github.com/jfrog/setup-jfrog-cli> |
+
+These tags are all on the Node.js 24 line, matching the `node24` runtime declared in this repo's `action.yml`. Older `@v4` tags use Node.js 20, which GitHub forces to Node.js 24 starting June 2nd, 2026 and removes from the runner on September 16th, 2026 ([deprecation notice](https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/)). GHES self-hosted runners need to be on `actions/runner` v2.327.1 or later for Node.js 24 compatibility.
 
 Where this list comes from:
 
@@ -115,11 +117,11 @@ npm run lint:shell     # shellcheck only
 
 `lint:actions` and `lint:shell` auto-download the `actionlint` and `shellcheck` binaries into `./bin/` (gitignored) on first run. The source is selected automatically:
 
-| Where you're running | Source |
-| --- | --- |
-| Public github.com Actions (`GITHUB_SERVER_URL=https://github.com`) | upstream GitHub releases without auth |
-| GHES Actions or local dev with `ARTIFACTORY_URL` set | Artifactory mirror under `<repo>/lint-tools/` |
-| Local dev with no Artifactory configured | upstream GitHub releases |
+| Where you're running                                               | Source                                        |
+|--------------------------------------------------------------------|-----------------------------------------------|
+| Public github.com Actions (`GITHUB_SERVER_URL=https://github.com`) | upstream GitHub releases without auth         |
+| GHES Actions or local dev with `ARTIFACTORY_URL` set               | Artifactory mirror under `<repo>/lint-tools/` |
+| Local dev with no Artifactory configured                           | upstream GitHub releases                      |
 
 For the Artifactory path, set:
 
@@ -129,6 +131,6 @@ export ARTIFACTORY_REPO=python-binaries-generic-local
 export ARTIFACTORY_TOKEN=<read-token>
 ```
 
-Pin specific releases with `ACTIONLINT_VERSION=1.7.7` (no leading `v`) or `SHELLCHECK_VERSION=v0.10.0`. When using the mirror, both must already be present under `<repo>/lint-tools/`; see [docs/artifactory-setup.md](docs/artifactory-setup.md#lint-tool-mirror) for how to populate them with `scripts/sync-lint-tools-to-artifactory.sh`.
+Pin specific releases with `ACTIONLINT_VERSION=1.7.7` (no leading `v`) or `SHELLCHECK_VERSION=v0.10.0`. When using the mirror, both must already be present under `<repo>/lint-tools/`; see [docs/artifactory-setup.md](docs/artifactory-setup.md#7-lint-tool-mirror) for how to populate them with `scripts/sync-lint-tools-to-artifactory.sh`.
 
 CI for this repo on github.com uses the upstream path (no Artifactory secrets needed). The same workflow (`.github/workflows/lint.yml`) also passes `ARTIFACTORY_URL`/`ARTIFACTORY_REPO`/`ARTIFACTORY_TOKEN` from Variables/Secrets through to the lint steps, so a fork that runs lint on a GHES self-hosted runner will automatically use the mirror once those values are configured. Project-specific actionlint config (allowed self-hosted runner labels, known config vars) lives in `.github/actionlint.yaml`.

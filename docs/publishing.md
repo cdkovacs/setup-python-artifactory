@@ -60,10 +60,10 @@ jobs:
   build:
     runs-on: [self-hosted, linux]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '24'
       - run: npm ci
       - run: npm run build
       - name: Verify dist is up to date
