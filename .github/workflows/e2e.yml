@@ -1,0 +1,38 @@
+name: e2e
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install npm deps
+        run: npm ci
+
+      - name: Build dist
+        run: npm run build
+
+      - name: Verify dist is up to date
+        run: |
+          if ! git diff --quiet dist/; then
+            echo "::error::dist/ is out of date. Run 'npm run build' and commit."
+            git --no-pager diff dist/
+            exit 1
+          fi
+
+      - name: Run e2e
+        run: ./test/run-e2e.sh
