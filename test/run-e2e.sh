@@ -41,6 +41,7 @@ read_output() {
 }
 
 cleanup() {
+  rm -f .vars .secrets
   if [[ "$KEEP_RUNNING" != "1" ]]; then
     log "Tearing down Artifactory"
     docker compose --env-file test/.env -f test/docker-compose.yml down -v >/dev/null 2>&1 || true
@@ -167,5 +168,30 @@ env -i PATH="$PATH" HOME="$HOME" \
 CACHE_HIT_2=$(read_output cache-hit "$GITHUB_OUTPUT_FILE")
 [[ "$CACHE_HIT_2" == "true" ]] \
   || fail "expected cache-hit=true on second run, got '$CACHE_HIT_2'"
+
+# 9. Optional: exercise the workflow via nektos/act if it's installed.
+#    Runs the same action under a real workflow runner, inside a container
+#    that reaches the host Artifactory via host.docker.internal. Skipped
+#    silently when `act` isn't on PATH so CI/devs without it aren't blocked.
+if command -v act >/dev/null 2>&1; then
+  log "Running act against test/workflows/act-e2e.yml"
+  cat > .vars <<EOF
+PYTHON_VERSION=$VERSION
+ARTIFACTORY_URL=http://host.docker.internal:8082/artifactory
+ARTIFACTORY_REPO=$ART_REPO
+EOF
+  cat > .secrets <<EOF
+ARTIFACTORY_TOKEN=$ARTIFACTORY_TOKEN
+EOF
+  act workflow_dispatch \
+    -W test/workflows/act-e2e.yml \
+    -P ubuntu-latest=catthehacker/ubuntu:act-latest \
+    --secret-file .secrets \
+    --var-file .vars \
+    --container-options "--add-host=host.docker.internal:host-gateway" \
+    || fail "act run failed"
+else
+  log "act not found on PATH; skipping nektos/act workflow run"
+fi
 
 log "ALL CHECKS PASSED"
