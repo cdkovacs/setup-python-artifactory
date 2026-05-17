@@ -27,7 +27,7 @@
     "@types/node": "^25.6.2",
     "@types/semver": "^7.5.8",
     "@vercel/ncc": "^0.38.1",
-    "eslint": "^10.3.0",
+    "eslint": "^10.4.0",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.3.3",
     "typescript": "^6.0.3",
